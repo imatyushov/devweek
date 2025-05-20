@@ -11,7 +11,7 @@ import pandas as pd
 import pickle
 from sentence_transformers import SentenceTransformer
 
-DATABASE_PATH=r'D:\itmo\testi\df_embed_frida.pkl'
+DATABASE_PATH=r'../db/df_embed_frida.pkl'
 
 #connect local llm
 llm = ChatOllama(
