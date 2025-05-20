@@ -32,12 +32,14 @@ ERRORS = [
     r"просмотреть это видео только на",
     r"такого видео нет",
     r"мне уже есть.*18.*лет",
+    r"Видео можно посмотреть только на ВОТУВЕ",
+    r"Листайте дальше, чтобы смотреть ленту рекомендаций"
 ]
 compiled_patterns = [re.compile(p, re.IGNORECASE) for p in ERRORS]
 FUZZY_THRESHOLD = 70
 TIMEOUT_SENTINEL = object()
 
-FOLDER = r"Data/03_dialog_files"
+FOLDER = r"D:\itmo\Data\05_Errors\All_images"
 SUPPORTED_EXT = {'.png', '.jpg', '.jpeg', '.tiff', '.bmp'}
 
 
@@ -98,7 +100,7 @@ def find_matches(text: str):
     return results
 
 
-def process_single(path):
+def process_single(path: str) -> str:
 
     if not os.path.isfile(path):
         raise FileNotFoundError(f"Файл не найден: {path}")
@@ -109,7 +111,7 @@ def process_single(path):
         return None
 
     matches = find_matches(text)
-    return text, matches
+    return matches[0][0]
 
 
 def main():
@@ -139,6 +141,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-    # a=process_single(r'D:\itmo\Data\05_Errors\All_images\1.png')
-    # print(a[1][0][0])
+    # main()
+
+    a=process_single(r'D:\itmo\Data\05_Errors\All_images\1.png')
+    print(a)
