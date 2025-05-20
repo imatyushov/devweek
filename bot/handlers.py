@@ -121,18 +121,16 @@ async def process_issue(message: Message, state: FSMContext):
                 print(f"Ошибка при скачивании документа: {e}")
         
         # Вызываем функцию обработки с передачей объектов файлов
-        await handle_issue(
+        # и получаем текст ответа
+        response_text, issue_info = await handle_issue(
             issue_id=issue_id,
             text=text,
             photos=photos, 
             documents=documents
         )
         
-        # Отправляем подтверждение с ID обращения
-        await message.answer(
-            f"Спасибо за ваше обращение. Ваше обращение зарегистрировано под номером: {issue_id[:8]}.\n"
-            f"Мы рассмотрим его в кратчайшие сроки."
-        )
+        # Отправляем ответ пользователю с текстом из handle_issue
+        await message.answer(response_text)
     except Exception as e:
         # В случае ошибки логируем и сообщаем пользователю
         print(f"Ошибка при обработке обращения: {e}")
