@@ -7,9 +7,9 @@ import uuid
 import io
 import asyncio
 
-from states import SupportState
-from keyboards import create_start_keyboard, create_issue_keyboard
-from utils import handle_issue
+from app.bot.states import SupportState
+from app.bot.keyboards import create_start_keyboard, create_issue_keyboard
+from app.bot.utils import handle_issue
 
 # Create router
 router = Router()

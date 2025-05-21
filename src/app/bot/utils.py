@@ -1,5 +1,7 @@
+import asyncio
 from typing import List, Optional, Dict, Any
 import io
+from app.ml.rag.issue_processor import process_issue
 
 async def handle_issue(*, issue_id: str, text: str = "", 
                        photos: List[Dict[str, Any]] = None, 
@@ -80,6 +82,9 @@ async def handle_issue(*, issue_id: str, text: str = "",
         "document_count": len(documents),
         "processed": True
     }
+    
+    result = await asyncio.to_thread(process_issue, issue_info) # since the LLMs calls are sync for now we should move this out of the event loop
+    return result, issue_info
     
     # Формируем ответ пользователю
     if text or photos or documents:

@@ -8,8 +8,8 @@ from aiogram.enums import ParseMode
 from aiogram.types import BotCommand
 from aiogram.client.default import DefaultBotProperties
 
-from handlers import register_handlers
-from keyboards import set_default_commands
+from app.bot.handlers import register_handlers
+from app.bot.keyboards import set_default_commands
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,7 +18,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 # Bot token from BotFather (from environment variable)
-API_TOKEN = '7738117291:AAEZv53BUxLmcpo-puQi1nikGE2ccS7Dyo8'
+API_TOKEN = os.getenv("TG_BOT_TOKEN")
 
 async def main():
     # Initialize Bot instance with the default parse mode
