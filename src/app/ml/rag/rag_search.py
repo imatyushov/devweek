@@ -5,11 +5,8 @@ import pickle
 import re
 from sentence_transformers import SentenceTransformer
 from langchain_ollama import ChatOllama
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 import app.ml.llm.llm_factory as llm_factory
-
-
-PATH = 'app/ml/db/embeddings/frida_new.pkl'
 
 class RAGService:
     def __init__(self, text_db_path: str):
@@ -37,59 +34,58 @@ class RAGService:
         dists, idxs = idx.search(np.array([emb]), top_k)
         res = self.df.iloc[idxs[0]].copy()
         res['similarity_score'] = 1 - dists[0] / 2
-        # sort by similarity and reset index
-        res = res.sort_values('similarity_score', ascending=False).reset_index(drop=True)
-        return res
+        return res.sort_values('similarity_score', ascending=False).reset_index(drop=True)
 
-    def generate_prompt(seld, user_question: str, top5: pd.DataFrame) -> str:
+    def combined_search(self, query: str, top_k: int = 6) -> pd.DataFrame:
+        q_res = self.rag_search(query, 'question', top_k)
+        c_res = self.rag_search(query, 'content', top_k)
+        q_res['source'] = 'question'
+        c_res['source'] = 'context'
+        combined = pd.concat([q_res, c_res], ignore_index=True)
+        combined = combined.sort_values('similarity_score', ascending=False).drop_duplicates('question').reset_index(drop=True)
+        return combined
 
-        # Формируем пронумерованный список кандидатов
-        candidates = top5['question'].tolist()
-        formatted_list = []
-        for idx, q in enumerate(candidates, start=1):
-            formatted_list.append(f"{idx}. {q}")
-        candidates_text = "\n".join(formatted_list)
-
-        # Обновлённый prompt
-        prompt = (
+    def generate_prompt(self, user_question: str, candidates: pd.DataFrame) -> str:
+        candidates_list = candidates['question'].tolist()[:6]
+        numbered = [f"{i+1}. {q}" for i, q in enumerate(candidates_list)]
+        text_list = "\n".join(numbered)
+        return (
             f"You are a semantic matcher.\n"
             f"User's question: \"{user_question}\"\n\n"
-            f"From the following list of candidate questions, select the one that is most semantically similar to the user's question.\n"
-            f"If none of the candidates are relevant or similar enough, respond with 'number 0'.\n"
-            f"Respond with only the number of the chosen question after the word 'number' (e.g., 'number 1', 'number 2', etc.) without any additional text.\n\n"
-            f"{candidates_text}"
+            f"From the following list of candidate questions, select the one most semantically similar to the user's question."
+            f" If none match well enough, answer 'number 0'.\n\n"
+            f"{text_list}" 
         )
-        print(prompt)
-        return prompt
 
     def extract_reversed_result_number(self, text: str) -> int:
         rev = text[::-1]
         m = re.search(r"rebmun", rev)
         if not m:
             return 0
-        num_rev = rev[:m.start()].strip()
-        num_str = num_rev[::-1]
-        m2 = re.search(r"\d+", num_str)
+        num_rev = rev[:m.start()].strip()[::-1]
+        m2 = re.search(r"\d+", num_rev)
         return int(m2.group()) if m2 else 0
 
     def find_match_index(self, question: str, candidates: pd.DataFrame) -> int:
-        prompt = self.generate_prompt(question, candidates)
-        msg = HumanMessage(content=prompt)
+        prompt_text = self.generate_prompt(question, candidates)
+        system_msg = SystemMessage(content="Select the number of the most semantically similar question from the list.")
+        human_msg = HumanMessage(content=prompt_text)
         try:
-            result = self.llm.generate([[msg]])
+            result = self.llm.generate([[system_msg, human_msg]])
             resp = result.generations[0][0].text.strip()
             return self.extract_reversed_result_number(resp)
         except Exception as e:
-            # Log or handle LLM errors; default to no match
             print(f"LLM error: {e}")
             return 0
 
-    def get_answer(self, user_question: str, search_type: str = 'question', top_k: int = 6) -> str:
-        results = self.rag_search(user_question, search_type, top_k)
+    def get_answer(self, user_question: str, search_type: str = 'content', top_k: int = 6) -> str:
+        if search_type in ('question', 'content'):
+            results = self.rag_search(user_question, search_type, top_k)
+        else:
+            results = self.combined_search(user_question, top_k)
         choice = self.find_match_index(user_question, results)
-        print(choice)
         if choice < 1 or choice > len(results):
-            return "К сожалению, я не смог найти ответ на ваш запрос. Перефразируйте его или обратитесь к оператору."
-        return results.loc[choice - 1, 'answer']
+            return "К сожалению, я не смог найти ответ. Перефразируйте запрос или обратитесь к оператору."
+        return results.loc[choice-1, 'answer']
 
-rag_service = RAGService(PATH)
+rag_service = RAGService('app/ml/db/embeddings/frida.pkl')
