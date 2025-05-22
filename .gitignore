@@ -183,3 +183,4 @@ cython_debug/
 
 # ide
 .vscode
+.env
