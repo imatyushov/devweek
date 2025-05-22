@@ -123,6 +123,7 @@ async def process_issue(message: Message, state: FSMContext):
         # Вызываем функцию обработки с передачей объектов файлов
         # и получаем текст ответа
         response_text, issue_info = await handle_issue(
+            user_id=message.from_user.id,
             issue_id=issue_id,
             text=text,
             photos=photos, 

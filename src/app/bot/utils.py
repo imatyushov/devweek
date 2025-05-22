@@ -3,7 +3,7 @@ from typing import List, Optional, Dict, Any
 import io
 from app.ml.rag.issue_processor import process_issue
 
-async def handle_issue(*, issue_id: str, text: str = "", 
+async def handle_issue(*, user_id: int, issue_id: str, text: str = "", 
                        photos: List[Dict[str, Any]] = None, 
                        documents: List[Dict[str, Any]] = None):
     """
@@ -77,6 +77,7 @@ async def handle_issue(*, issue_id: str, text: str = "",
     # Формируем информацию об обращении
     issue_info = {
         "issue_id": issue_id,
+        "user_id": user_id,
         "text": text,
         "photo": photos[0] if photos else None,
         "photo_count": len(photos),
