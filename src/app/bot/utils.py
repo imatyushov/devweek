@@ -78,6 +78,7 @@ async def handle_issue(*, issue_id: str, text: str = "",
     issue_info = {
         "issue_id": issue_id,
         "text": text,
+        "photo": photos[0] if photos else None,
         "photo_count": len(photos),
         "document_count": len(documents),
         "processed": True

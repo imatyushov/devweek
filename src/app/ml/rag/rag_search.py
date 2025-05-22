@@ -9,7 +9,7 @@ from langchain_core.messages import HumanMessage
 import app.ml.llm.llm_factory as llm_factory
 
 
-PATH = 'app/ml/db/frida_new.pkl'
+PATH = 'app/ml/db/embeddings/frida_new.pkl'
 
 class RAGService:
     def __init__(self, text_db_path: str):

@@ -13,7 +13,7 @@ from sentence_transformers import SentenceTransformer
 import app.ml.llm.llm_factory as llm_factory
 
 import os
-DATABASE_PATH='app/ml/db/df_embed_frida.pkl'
+DATABASE_PATH='app/ml/db/embeddings/df_embed_frida.pkl'
 
 #connect local llm
 llm = llm_factory.get_configuration_llm()
