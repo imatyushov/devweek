@@ -1,7 +1,10 @@
 import asyncio
 from typing import List, Optional, Dict, Any
 import io
-from app.ml.rag.issue_processor import process_issue
+from app.ml.rag.issue_processor import process_issue, clear_user_history
+
+def clear_context(user_id:int):
+    clear_user_history(user_id)
 
 async def handle_issue(*, user_id: int, issue_id: str, text: str = "", 
                        photos: List[Dict[str, Any]] = None, 

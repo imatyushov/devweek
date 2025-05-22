@@ -10,6 +10,7 @@ import asyncio
 from app.bot.states import SupportState
 from app.bot.keyboards import create_start_keyboard, create_issue_keyboard
 from app.bot.utils import handle_issue
+from app.bot.utils import clear_context
 
 # Create router
 router = Router()
@@ -43,6 +44,8 @@ async def finish_issue(message: Message, state: FSMContext):
     """
     Handler for "Finish Issue" button when in issue state
     """
+    user_id = message.from_user.id
+    clear_context(user_id)
     keyboard = create_start_keyboard()
     await message.answer(
         "Обращение завершено. Если у вас есть еще вопросы, нажмите кнопку 'Новое обращение'.",
@@ -131,7 +134,10 @@ async def process_issue(message: Message, state: FSMContext):
         )
         
         # Отправляем ответ пользователю с текстом из handle_issue
-        await message.answer(response_text)
+        keyboard = create_issue_keyboard()
+        await message.answer(response_text,
+                             reply_markup=keyboard)
+        
     except Exception as e:
         # В случае ошибки логируем и сообщаем пользователю
         print(f"Ошибка при обработке обращения: {e}")
@@ -140,12 +146,12 @@ async def process_issue(message: Message, state: FSMContext):
         )
     
     # Clear state and return to start
-    await state.clear()
-    keyboard = create_start_keyboard()
-    await message.answer(
-        "Если у вас есть еще вопросы, нажмите кнопку 'Новое обращение'.",
-        reply_markup=keyboard
-    )
+    #await state.clear()
+    #keyboard = create_start_keyboard()
+    #await message.answer(
+    #    "Если у вас есть еще вопросы, нажмите кнопку 'Новое обращение'.",
+    #    reply_markup=keyboard
+    #)
 
 def register_handlers(dp):
     """

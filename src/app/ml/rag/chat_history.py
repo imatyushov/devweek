@@ -36,4 +36,8 @@ class UserChatHistoryStorage:
             history = self.__user_histories.get(user_id)
         return None if history is None else history.get_history()
     
+    def clear_user_history(self, user_id):
+        with self.__lock:
+            self.__user_histories[user_id] = UserChatHistory()
+    
 storage = UserChatHistoryStorage()

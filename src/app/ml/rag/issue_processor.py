@@ -1,9 +1,14 @@
 
 from app.ml.ocr.photos_get_text import get_answer_from_image
 #from app.ml.rag.rag_search import rag_service
-from app.ml.rag.rag import get_answer
+#from app.ml.rag.rag import get_answer
+from .rag_final import deepseek_assistant
 import tempfile
 from .chat_history import storage
+
+def clear_user_history(user_id: int):
+    storage.clear_user_history(user_id)
+    
 
 def process_issue(issue: dict) -> str:
     text = issue.get("text")
@@ -13,7 +18,7 @@ def process_issue(issue: dict) -> str:
         return "Не удалось определить идентификатор пользователя. Обратитесь к разработчикам приложения"
     if photo is None:
         storage.add_message(user_id, text)
-        return get_answer(storage.get_user_history(user_id))
+        return deepseek_assistant.answer_question(storage.get_user_history(user_id))
     else:
         photo_ext = "." + photo['file_name'].split(".")[1]
         photo_bytesIO = photo['file_bytes']
