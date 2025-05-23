@@ -2,20 +2,14 @@ import os
 import re
 from pathlib import Path
 from PIL import Image, ImageOps
-import pyocr
-import pyocr.builders
+import easyocr
 from fuzzywuzzy import fuzz
 import multiprocessing
 import threading
 import pandas as pd
 
 
-tools = pyocr.get_available_tools()
-if not tools:
-    raise RuntimeError("OCR инструмент не найден.")
-tool = tools[0]
-
-TIMEOUT = 10.0
+TIMEOUT = 20.0
 ERRORS = [
     r"упс, неправильная ссылка.*рекомендациях",
     r"автор удалил это видео",
@@ -43,6 +37,7 @@ TIMEOUT_SENTINEL = object()
 FOLDER = r"app/ml/images"
 SUPPORTED_EXT = {'.png', '.jpg', '.jpeg', '.tiff', '.bmp'}
 
+reader = easyocr.Reader(['ru'])
 
 def preprocess_image(path):
     ### change path to bin photo
@@ -52,19 +47,18 @@ def preprocess_image(path):
     bw = gray.point(lambda x: 0 if x < 128 else 255, mode='1')
     return bw.convert('L')
 
-
 def ocr_worker(path, return_dict):
     try:
         img = preprocess_image(path)
-        text = "" if img is None else tool.image_to_string(
-            img, lang='rus', builder=pyocr.builders.TextBuilder()
-        )
+        text = ""
+        if img is not None:
+            text = " ".join([line[1] for line in reader.readtext(img)])
         return_dict['text'] = text
     except Exception:
         return_dict['text'] = ""
 
-
 def run_with_timeout(path):
+    
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     proc = multiprocessing.Process(target=ocr_worker, args=(path, return_dict))
@@ -86,7 +80,6 @@ def run_with_timeout(path):
         return TIMEOUT_SENTINEL
     return return_dict.get('text', "")
 
-
 def find_matches(text: str):
     if not text:
         return []
@@ -102,7 +95,6 @@ def find_matches(text: str):
             results.append((pat, score))
     return results
 
-
 def process_single(path):
     ###
     if not os.path.isfile(path):
@@ -115,7 +107,6 @@ def process_single(path):
 
     matches = find_matches(text)
     return text, matches
-
 
 def main():
     for fname in sorted(os.listdir(FOLDER)):
@@ -142,7 +133,6 @@ def main():
         else:
             print("Совпадений не найдено.")
 
-    
 def is_similar_question(input_text, questions, threshold=85):
     for question in questions:
         similarity = fuzz.token_set_ratio(input_text.lower(), question.lower())
@@ -151,7 +141,7 @@ def is_similar_question(input_text, questions, threshold=85):
     return False, None, 0
 
 def extract_quoted_text(text):
-    match = re.search(r'["«](.*?)["»]', text)
+    match = re.search(r'[\"«](.*?)[\"»]', text)
     return match.group(1) if match else text
 
 # if __name__ == '__main__':
@@ -172,6 +162,7 @@ def extract_quoted_text(text):
 #         print(f"Найдено совпадение: '{matched_question}' (схожесть: {similarity}%)")
 #     else:
 #         print("Совпадений не найдено")
+
 def get_answer_from_image(image_path, df_path='app/ml/db/csv/02_Stubs.csv', threshold=70):
     # Обработка изображения и извлечение текста
     result = process_single(image_path)
@@ -180,11 +171,11 @@ def get_answer_from_image(image_path, df_path='app/ml/db/csv/02_Stubs.csv', thre
         return None
     text, matches = result
     input_text = extract_quoted_text(text)
-    
+
     # Загрузка и подготовка датафрейма
     df = pd.read_csv(df_path, sep='|')
     df['question_clean'] = df['question'].apply(extract_quoted_text)
-    
+
     # Поиск максимальной схожести
     max_similarity = -1
     best_answer = None
@@ -194,11 +185,9 @@ def get_answer_from_image(image_path, df_path='app/ml/db/csv/02_Stubs.csv', thre
         if similarity > max_similarity:
             max_similarity = similarity
             best_answer = row['answer']
-    
-    return best_answer if max_similarity >= threshold else None
+
+    return best_answer if max_similarity >= 30 else 'На удлось разобрать текст на фотографии, прикрипите изображение лучшего качества'
 
 if __name__ == '__main__':
-    answer = get_answer_from_image(r'app/ml/images/3.png')
+    answer = get_answer_from_image(photo_path)
     print(answer)
-
-

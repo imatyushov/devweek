@@ -10,6 +10,8 @@ from aiogram.client.default import DefaultBotProperties
 
 from app.bot.handlers import register_handlers
 from app.bot.keyboards import set_default_commands
+import warnings
+warnings.filterwarnings("ignore")
 
 # Load environment variables from .env file
 load_dotenv()

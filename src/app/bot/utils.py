@@ -40,21 +40,21 @@ async def handle_issue(*, user_id: int, issue_id: str, text: str = "",
         print("Текст обращения отсутствует")
     
     # Выводим информацию о фотографиях
-    if photos:
-        photo_info = f"Получено фотографий: {len(photos)}"
-        debug_info.append(photo_info)
-        print(f"\nФотографии ({len(photos)}):")
-        for i, photo_data in enumerate(photos):
-            photo_bytes = photo_data['file_bytes']
-            photo_size = photo_bytes.getbuffer().nbytes
-            photo_detail = f"  {i+1}. {photo_data['file_name']} - {photo_size} байт, тип: {photo_data['mime_type']}"
-            print(photo_detail)
+    # if photos:
+    #     photo_info = f"Получено фотографий: {len(photos)}"
+    #     debug_info.append(photo_info)
+    #     print(f"\nФотографии ({len(photos)}):")
+    #     for i, photo_data in enumerate(photos):
+    #         photo_bytes = photo_data['file_bytes']
+    #         photo_size = photo_bytes.getbuffer().nbytes
+    #         photo_detail = f"  {i+1}. {photo_data['file_name']} - {photo_size} байт, тип: {photo_data['mime_type']}"
+    #         print(photo_detail)
             
-            # Здесь можно добавить логику анализа изображений
-            # Например: print(f"     - Анализ изображения: обнаружены объекты X, Y, Z")
-    else:
-        debug_info.append("Фотографий нет")
-        print("\nФотографий нет")
+    #         # Здесь можно добавить логику анализа изображений
+    #         # Например: print(f"     - Анализ изображения: обнаружены объекты X, Y, Z")
+    # else:
+    #     debug_info.append("Фотографий нет")
+    #     print("\nФотографий нет")
     
     # Выводим информацию о документах
     if documents:
